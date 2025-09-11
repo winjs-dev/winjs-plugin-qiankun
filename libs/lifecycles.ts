@@ -1,10 +1,3 @@
-/**
- * lifecycle
- * @Author: liwb (lwbhtml@163.com)
- * @Date: 2024-05-30 15:35
- * @LastEditTime: 2024-05-30 15:35
- * @Description: lifecycle
- */
 // @ts-nocheck
 import { getPluginManager } from '@@/core/plugin';
 import { ApplyPluginsType } from '@@/exports';

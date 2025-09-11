@@ -1,20 +1,26 @@
+/**
+ * qiankun
+ * @Author: liwb (lwbhtml@163.com)
+ * @Date: 2025-09-11 09:33
+ * @Description: 适配乾坤主应用的子应用改造
+ */
 import type { IApi } from '@winner-fed/winjs';
 
 export default (api: IApi) => {
   api.describe({
-    key: 'example',
-    enableBy: api.EnableBy.config,
+    key: 'qiankun',
     config: {
       schema({ zod }) {
-        return zod.object({
-          foo: zod.string(),
-        });
+        return zod
+          .object({
+            child: zod.record(zod.any()),
+          })
+          .deepPartial();
       },
     },
   });
 
-  api.modifyConfig((memo) => {
-    memo.foo = api.userConfig.example.foo;
-    return memo;
-  });
+  api.addRuntimePluginKey(() => ['qiankun']);
+
+  api.registerPlugins([require.resolve('./child')]);
 };

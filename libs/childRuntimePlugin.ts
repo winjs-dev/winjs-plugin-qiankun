@@ -1,10 +1,3 @@
-/**
- * runtime
- * @Author: liwb (lwbhtml@163.com)
- * @Date: 2024-05-30 15:36
- * @LastEditTime: 2024-05-30 15:36
- * @Description: runtime
- */
 // @ts-nocheck
 import { createHistory } from '@@/core/history';
 import qiankunRender, { clientRenderOptsStack } from './lifecycles';

@@ -11,9 +11,11 @@
     "preview": "win preview"
   },
   "dependencies": {
+    "vue": "^2.7.14",
     "@winner-fed/winjs": "*"
   },
   "devDependencies": {
+    "@winner-fed/preset-vue2": "*",
     "typescript": "^5.0.3"
   }
 }

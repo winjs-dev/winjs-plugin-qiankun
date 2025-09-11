@@ -1,24 +1,55 @@
-/**
- * qiankun
- * @Author: liwb (lwbhtml@163.com)
- * @Date: 2024-05-30 15:38
- * @LastEditTime: 2024-05-30 15:38
- * @Description: qiankun
- */
-import assert from 'assert';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import assert from 'node:assert';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { lodash, withTmpPath } from '@winner-fed/utils';
-import { IApi, RUNTIME_TYPE_FILE_NAME } from 'win';
+import type { IApi } from '@winner-fed/winjs';
 
-export function isChildEnable(opts: { userConfig: any }) {
-  return !!opts.userConfig?.qiankun?.child || lodash.isEqual(opts.userConfig?.qiankun, {});
+const RUNTIME_TYPE_FILE_NAME = 'runtimeConfig.d.ts';
+
+// 定义配置类型接口
+interface UserConfig {
+  qiankun?: {
+    child?: QiankunChildConfig;
+  };
+  history?: {
+    type?: string;
+  };
+}
+
+interface QiankunChildConfig {
+  shouldNotModifyDefaultBase?: boolean;
+  shouldNotModifyRuntimePublicPath?: boolean;
+  shouldNotAddLibraryChunkName?: boolean;
+  enable?: boolean;
+  devSourceMap?: boolean;
+}
+
+interface ModifiedDefaultConfig {
+  runtimePublicPath?: boolean;
+  qiankun?: {
+    child?: QiankunChildConfig;
+  };
+  base?: string;
+  mfsu?:
+    | {
+        mfName?: string;
+      }
+    | false;
+  publicPath?: string;
+  mountElementId?: string;
+}
+
+export function isChildEnable(opts: { userConfig: UserConfig }) {
+  return (
+    !!opts.userConfig?.qiankun?.child ||
+    lodash.isEqual(opts.userConfig?.qiankun, {})
+  );
 }
 
 export default (api: IApi) => {
   api.describe({
     key: 'qiankun-child',
-    enableBy: () => isChildEnable(api)
+    enableBy: () => isChildEnable(api),
   });
 
   api.addRuntimePlugin(() => {
@@ -53,29 +84,32 @@ export interface IRuntimeConfig {
   api.modifyDefaultConfig((memo) => {
     const initialMicroOptions = {
       devSourceMap: true,
-      ...(memo.qiankun || {}).child
+      ...memo.qiankun?.child,
     };
-    const modifiedDefaultConfig = {
+    const modifiedDefaultConfig: ModifiedDefaultConfig = {
       ...memo,
       // 默认开启 runtimePublicPath，避免出现 dynamic import 场景子应用资源地址出问题
       runtimePublicPath: true,
       qiankun: {
         ...memo.qiankun,
-        child: initialMicroOptions
-      }
+        child: initialMicroOptions,
+      },
     };
 
-    const shouldNotModifyDefaultBase = api.userConfig.qiankun?.child?.shouldNotModifyDefaultBase ?? initialMicroOptions.shouldNotModifyDefaultBase;
+    const shouldNotModifyDefaultBase =
+      api.userConfig.qiankun?.child?.shouldNotModifyDefaultBase ??
+      initialMicroOptions.shouldNotModifyDefaultBase;
     const historyType = api.userConfig.history?.type || 'browser';
     if (!shouldNotModifyDefaultBase && historyType !== 'hash') {
       modifiedDefaultConfig.base = `/${api.pkg.name}`;
     }
 
     if (modifiedDefaultConfig.mfsu !== false) {
+      const currentMfsu = modifiedDefaultConfig.mfsu || {};
       modifiedDefaultConfig.mfsu = {
-        ...modifiedDefaultConfig.mfsu,
+        ...currentMfsu,
         mfName:
-          modifiedDefaultConfig.mfsu?.mfName ||
+          currentMfsu.mfName ||
           `mf_${api.pkg.name
             // 替换掉包名里的特殊字符
             // e.g. @umi/ui -> umi_ui
@@ -86,19 +120,19 @@ export interface IRuntimeConfig {
 
     return modifiedDefaultConfig;
   });
-//
+  //
   api.addHTMLHeadScripts(() => {
     const dontModify =
       api.config.qiankun?.child?.shouldNotModifyRuntimePublicPath;
     return dontModify
       ? []
       : [
-        `
+          `
         __webpack_public_path__ = window.__INJECTED_PUBLIC_PATH_BY_QIANKUN__;
         window.publicPath = window.__INJECTED_PUBLIC_PATH_BY_QIANKUN__ || "${
           api.config.publicPath || '/'
         }";`,
-      ];
+        ];
   });
 
   api.chainWebpack((config) => {
@@ -107,8 +141,8 @@ export interface IRuntimeConfig {
     // mfsu 线上不会开启，所以这里只需要判断本地是否开启即可
     const {
       shouldNotAddLibraryChunkName = api.env === 'production' ||
-        !Boolean(api.config.mfsu),
-    } = (api.config.qiankun || {}).child!;
+        !api.config.mfsu,
+    } = api.config.qiankun?.child || {};
     config.output
       .libraryTarget('umd')
       .library(
@@ -121,7 +155,7 @@ export interface IRuntimeConfig {
 
   // win bundle 添加 entry 标记
   api.modifyHTML(($) => {
-    $('script').each((_: any, el: any) => {
+    $('script').each((_: number, el: Element) => {
       const scriptEl = $(el);
       const winEntry = /\/?win(\.\w+)?\.js$/g;
       if (winEntry.test(scriptEl.attr('src') ?? '')) {
@@ -154,21 +188,15 @@ if (!window.__POWERED_BY_QIANKUN__) {
   ]);
 
   function getFileContent(file: string) {
-    return readFileSync(
-      join(__dirname, '../../libs', file),
-      'utf-8',
-    );
+    return readFileSync(join(__dirname, '../libs', file), 'utf-8');
   }
 
   api.onGenerateFiles({
     fn() {
-      [
-        'childRuntimePlugin.ts',
-        'lifecycles.ts',
-      ].forEach((file) => {
+      ['childRuntimePlugin.ts', 'lifecycles.ts'].forEach((file) => {
         api.writeTmpFile({
           path: file.replace(/\.tpl$/, ''),
-          content: getFileContent(file)
+          content: getFileContent(file),
         });
       });
 
@@ -178,7 +206,6 @@ if (!window.__POWERED_BY_QIANKUN__) {
 export const isQiankun = () => window.__POWERED_BY_QIANKUN__;
       `,
       });
-    }
+    },
   });
-
-}
+};

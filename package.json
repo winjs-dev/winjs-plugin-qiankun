@@ -1,5 +1,6 @@
 {
-  "name": "winjs-plugin-template",
+  "name": "@winner-fed/plugin-qiankun",
+  "description": "适配 WinJS 的微前端 qiankun 子应用插件。",
   "keywords": [
     "winjs",
     "plugin",
@@ -11,10 +12,10 @@
     "typescript",
     "biome"
   ],
-  "version": "0.0.0",
+  "version": "1.0.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/winjs-dev/winjs-plugin-template.git"
+    "url": "git+https://github.com/winjs-dev/winjs-plugin-qiankun.git"
   },
   "license": "MIT",
   "type": "module",
@@ -23,13 +24,19 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./child": {
+      "types": "./dist/child.d.ts",
+      "import": "./dist/child.js",
+      "require": "./dist/child.cjs"
     }
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "libs"
   ],
   "scripts": {
     "build": "rslib build",
