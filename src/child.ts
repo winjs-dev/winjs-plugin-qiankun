@@ -123,14 +123,14 @@ export interface IRuntimeConfig {
   //
   api.addHTMLHeadScripts(() => {
     const dontModify =
-      api.config.qiankun?.child?.shouldNotModifyRuntimePublicPath;
+      api.userConfig.qiankun?.child?.shouldNotModifyRuntimePublicPath;
     return dontModify
       ? []
       : [
           `
         __webpack_public_path__ = window.__INJECTED_PUBLIC_PATH_BY_QIANKUN__;
         window.publicPath = window.__INJECTED_PUBLIC_PATH_BY_QIANKUN__ || "${
-          api.config.publicPath || '/'
+          api.userConfig.publicPath || '/'
         }";`,
         ];
   });
@@ -141,8 +141,8 @@ export interface IRuntimeConfig {
     // mfsu 线上不会开启，所以这里只需要判断本地是否开启即可
     const {
       shouldNotAddLibraryChunkName = api.env === 'production' ||
-        !api.config.mfsu,
-    } = api.config.qiankun?.child || {};
+        !api.userConfig.mfsu,
+    } = api.userConfig.qiankun?.child || {};
     config.output
       .libraryTarget('umd')
       .library(
@@ -178,8 +178,8 @@ export interface IRuntimeConfig {
   api.addEntryCode(() => [
     `
 export const bootstrap = qiankun_genBootstrap(render);
-export const mount = qiankun_genMount('${api.config.mountElementId}');
-export const unmount = qiankun_genUnmount('${api.config.mountElementId}');
+export const mount = qiankun_genMount('${api.userConfig.mountElementId}');
+export const unmount = qiankun_genUnmount('${api.userConfig.mountElementId}');
 export const update = qiankun_genUpdate();
 if (!window.__POWERED_BY_QIANKUN__) {
   bootstrap().then(mount);
