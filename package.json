@@ -57,7 +57,7 @@
     "@rslib/core": "^0.17.0",
     "@types/node": "^22.15.34",
     "@winner-fed/winjs": "*",
-    "bumpp": "10.3.1",
+    "bumpp": "10.3.2",
     "simple-git-hooks": "^2.13.0",
     "typescript": "^5.8.3"
   },
